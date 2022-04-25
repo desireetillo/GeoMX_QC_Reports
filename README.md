@@ -46,6 +46,10 @@ rmarkdown::render('GeoMX_TA_InitialQC_parameterized.Rmd',
                               PKCFilename=<PKC_FILE_NAME>,
                               WorkSheet=<WORKSHEET_FILE_NAME>
                   )
-)```
+)
+```
 
-
+## Output
+* A nicely formatted html report
+* Raw counts (`<output_prefix>_raw_counts.csv`) and Q3 normalized data (`<output_prefix>_normdata.csv`) for each ROI 
+* workspace in Rdata format(`<output_prefix>.RData`)
