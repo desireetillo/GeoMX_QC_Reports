@@ -18,8 +18,11 @@ params:
 ---
 
 
-```{r setup, include=FALSE}
+```{r setupandlibs, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(NanoStringNCTools)
+library(GeomxTools)
 
 datadir <- params$datadir
 DCCdir <- params$DCCdir
@@ -28,21 +31,20 @@ WorkSheet<- params$WorkSheet
 output_prefix<-params$output_prefix
 projectname<-params$projectname
 
+
 ```
 
 
 # Introduction
 
-This report outlines the initial QC for **`r projectname`** using the module **`r PKCfilename`**.  
+This report outlines the initial QC for **`r projectname`** using the module **`r gsub(".pkc", "", PKCfilename)`**.  
 
 For more information about this workflow, please see the [GeoMXWorkflows vignette](https://bioconductor.org/packages/release/workflows/vignettes/GeoMxWorkflows/inst/doc/GeomxTools_RNA-NGS_Analysis.html) on Bioconductor.
 
 
 
-```{r libs, message = FALSE, warning = FALSE, eval = TRUE}
+```{r loaddata, message = FALSE, eval = TRUE}
 
-library(NanoStringNCTools)
-library(GeomxTools)
 
 DCCFiles <- list.files(file.path(datadir , DCCdir), pattern=".dcc$", full.names=TRUE)
 PKCFiles <- file.path(datadir, PKCfilename)
@@ -422,7 +424,7 @@ dim(target_myData)
 
 We will now normalize the GeoMx data for downstream visualizations and differential expression. The two common methods for normalization of DSP-NGS RNA data are i) quartile 3 (Q3) or ii) background normalization.
 
-Q3 normalization is typically the preferred normalization strategy for most DSP-NGS RNA studie, so we will perform Q3 normalization here.
+Q3 normalization is typically the preferred normalization strategy for most DSP-NGS RNA studies, so we will perform Q3 normalization here.
 
 Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. Ideally, there should be a separation between these two values to ensure we have stable measure of Q3 signal. If you do not see sufficient separation between these values, you may consider more aggressive filtering of low signal segments/genes.   For additional conceptual guidance, please refer to Nanostring's [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/). 
 
