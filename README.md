@@ -31,7 +31,7 @@ Where:
 ### Default inputs 
 ```
 rmarkdown::render('GeoMX_TA_InitialQC_parameterized.Rmd',
-                  output_file = 'demo.html'
+                  output_file = ' test_demodata_QC.html'
         )
 ```
 

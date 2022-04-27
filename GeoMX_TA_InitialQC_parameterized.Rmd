@@ -33,7 +33,9 @@ projectname<-params$projectname
 
 # Introduction
 
-This report outlines the initial QC for `r params$projectname`.  For more information about this workflow, please see the [GeoMXWorkflows vignette](https://bioconductor.org/packages/release/workflows/vignettes/GeoMxWorkflows/inst/doc/GeomxTools_RNA-NGS_Analysis.html) on Bioconductor.
+This report outlines the initial QC for **`r projectname`** using the module **`r PKCfilename`**.  
+
+For more information about this workflow, please see the [GeoMXWorkflows vignette](https://bioconductor.org/packages/release/workflows/vignettes/GeoMxWorkflows/inst/doc/GeomxTools_RNA-NGS_Analysis.html) on Bioconductor.
 
 
 
@@ -67,13 +69,13 @@ modules <- gsub(".pkc", "", pkcs)
 
 Before excluding any low-performing ROI/AOI segments, we visualize the distributions of the data for the different QC parameters.  The cutoffs used are:
 
-* Raw sequencing reads: segments with >1000 raw reads are removed.
-* % Aligned,% Trimmed, or % Stitched sequencing reads: segments below ~80% for one or more of these QC parameters are removed.
-* % Sequencing saturation ([1-deduplicated reads/aligned reads]%): segments below ~50% require additional sequencing to capture full sample diversity and are not typically analyzed until improved.
-* Negative Count: this is the geometric mean of the several unique negative probes in the GeoMx panel that do not target mRNA and establish the background count level per segment; segments with low negative counts (1-10) are not necessarily removed but may be studied closer for low endogenous gene signal and/or insufficient tissue sampling.
-* No Template Control (NTC) count: values >1,000 could indicate contamination for the segments associated with this NTC; however, in cases where the NTC count is between 1,000- 10,000, the segments may be used if the NTC data is uniformly low (e.g. 0-2 counts for all probes).
-* Nuclei: >100 nuclei per segment is generally recommended; however, this cutoff is highly study/tissue dependent and may need to be reduced; what is most important is consistency in the nuclei distribution for segments within the study.  We use 20 in this case.
-* Area: generally correlates with nuclei; a strict cutoff is not generally applied based on area.
+* **Raw sequencing reads**: segments with >1000 raw reads are removed.
+* **% Aligned,% Trimmed, or % Stitched sequencing reads**: segments below ~80% for one or more of these QC parameters are removed.
+* **% Sequencing saturation ([1-deduplicated reads/aligned reads]%)**: segments below ~50% require additional sequencing to capture full sample diversity and are not typically analyzed until improved.
+* **Negative Count**: this is the geometric mean of the several unique negative probes in the GeoMx panel that do not target mRNA and establish the background count level per segment; segments with low negative counts (<10) are not necessarily removed but may be studied closer for low endogenous gene signal and/or insufficient tissue sampling.
+* **No Template Control (NTC) count**: values >1,000 could indicate contamination for the segments associated with this NTC; however, in cases where the NTC count is between 1,000- 10,000, the segments may be used if the NTC data is uniformly low (e.g. 0-2 counts for all probes).
+* **Nuclei**: >100 nuclei per segment is generally recommended; however, this cutoff is highly study/tissue dependent and may need to be reduced; what is most important is consistency in the nuclei distribution for segments within the study.  We use 20 in this case.
+* **Area**: generally correlates with nuclei; a strict cutoff is not generally applied based on area.
 
 _***Note***:  You may need to change these cutoffs depending on your experimental setup._
 
@@ -169,7 +171,7 @@ for(ann in negCols) {
 pData(myData) <- pData(myData)[, !colnames(pData(myData)) %in% negCols]
 ```
 
-
+Below is a table summarizing the # of segments with a given NTC count:
 ```{r NTCcounts, results= "asis"}
 # show all NTC values, Freq = # of Segments with a given NTC count (for WTA samples this is the deduplicated read count from the empty well A01):
 kable(table(NTC_Count = sData(myData)$NTC),
@@ -188,7 +190,7 @@ Before we summarize our data into gene-level count data, we will remove low-perf
 
 After Probe QC, there will always remain at least one probe representing every gene target. In other words, Probe QC never removes genes from your data.
 
-### Set Probe QC Flags
+### Set probe QC flags
 
 A probe is removed globally from the dataset if either of the following is true:
 
@@ -197,7 +199,7 @@ A probe is removed globally from the dataset if either of the following is true:
 
 A probe is removed locally (from a given segment) if the probe is an outlier according to the Grubb's test in that segment.
 
-We do not typically adjust these QC parameters.
+_***Note***:  We do not typically adjust these QC parameters._
 
 ```{r setbioprobeqcflag,  eval = TRUE}
 # Generally keep the qcCutoffs parameters unchanged. Set removeLocalOutliers to 
@@ -239,7 +241,7 @@ myData <- ProbeQCPassed
 dim(myData)
 ```
 
-## Create Gene-level Count Data
+## Create gene-level count data
 
 With our Probe QC steps complete, we will generate a gene-level count matrix. The count for any gene with multiple probes per segment is calculated as the geometric mean of those probes. The number below is the number of genes in the raw counts table.
 
@@ -262,7 +264,7 @@ In addition to Segment and Probe QC, we also determine the limit of quantificati
 
 $$LOQ_{i} = geomean(NegProbe_{i}) * geoSD(NegProbe_{i})^{n}$$
 
-We typically use 2 geometric standard deviations ($n = 2$) above the geometric mean as the LOQ, which is reasonable for most studies. We also recommend that a minimum LOQ of 2 be used if the LOQ calculated in a segment is below this threshold.
+Nanostring typically uses 2 geometric standard deviations ($n = 2$) above the geometric mean as the LOQ, which is reasonable for most studies, and recommend that a minimum LOQ of 2 be used if the LOQ calculated in a segment is below this threshold.
 
 After determining the limit of quantification (LOQ) per segment, we recommend filtering out either segments and/or genes with abnormally low signal (below the LOQ). Filtering is an important step to focus on the true biological data of interest.
 
@@ -364,7 +366,7 @@ fData(target_myData)$DetectionRate <-
 
 ```
 
-## Gene Filtering
+## Gene filtering
 
 We will graph the total number of genes detected in different percentages of segments. Based on the visualization below, we can better understand global gene detection in our study and select how many low detected genes to filter out of the dataset. Gene filtering increases performance of downstream statistical tests and improves interpretation of true biological signal.
 
@@ -393,7 +395,8 @@ ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
 ```
 
 
-We will now select genes detected in at least 10% of segments and filter out the remainder of the targets.  
+We will now select genes detected in at least 10% of segments and filter out the remainder of the targets. 
+
 _***Note:*** if we know that a key gene is represented in only a small number of segments (<10%) due to biological diversity, we may select a different cutoff or keep the target gene by manually selecting them for inclusion in the data object._
 
 
@@ -419,7 +422,7 @@ dim(target_myData)
 
 We will now normalize the GeoMx data for downstream visualizations and differential expression. The two common methods for normalization of DSP-NGS RNA data are i) quartile 3 (Q3) or ii) background normalization.
 
-Q3 normalization is typically the preferred normalization strategy for most DSP-NGS RNA studies.
+Q3 normalization is typically the preferred normalization strategy for most DSP-NGS RNA studie, so we will perform Q3 normalization here.
 
 Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. Ideally, there should be a separation between these two values to ensure we have stable measure of Q3 signal. If you do not see sufficient separation between these values, you may consider more aggressive filtering of low signal segments/genes.   For additional conceptual guidance, please refer to Nanostring's [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/). 
 
@@ -516,7 +519,7 @@ boxplot(assayDataElement(target_myData[,1:20], elt = "q_norm"),
 
 ```
 
-# Unsupervised Analysis
+# Unsupervised analysis
 
 Now that we have filtered and normalized our data set we can explore the data. 
 
