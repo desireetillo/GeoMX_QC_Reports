@@ -531,6 +531,7 @@ Now that we have filtered and normalized our data set we can explore the data.
 library(umap)
 library(Rtsne)
 
+myshapes<-c(4,8,15,16,17,18,21,22,3,42)
 # update defaults for umap to contain a stable random_state (seed)
 custom_umap <- umap::umap.defaults
 custom_umap$random_state <- 42
@@ -542,6 +543,7 @@ pData(target_myData)[, c("UMAP1", "UMAP2")] <- umap_out$layout[, c(1,2)]
 ggplot(pData(target_myData),
        aes(x = UMAP1, y = UMAP2, color = class, shape=region)) +
   geom_point(size = 3) +
+  scale_shape_manual(values=myshapes) +
   theme_bw()
 
 # run tSNE
@@ -553,6 +555,7 @@ pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_myData),
        aes(x = tSNE1, y = tSNE2, color = class, shape=region)) +
   geom_point(size = 3) +
+  scale_shape_manual(values=myshapes) +
   theme_bw()
 
 ## run PCA
@@ -572,6 +575,7 @@ ggplot(pData(target_myData),
   geom_point(size = 3) +
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
+  scale_shape_manual(values=myshapes) +
   theme_bw()
 
 
