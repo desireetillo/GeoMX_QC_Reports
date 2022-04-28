@@ -22,7 +22,7 @@ Where:
 	*  area 
 	*  nuclei 
 	*  class (e.g. condition/treatment)
-	*  type (e.g morphology/physiology)
+	*  region (e.g morphology/physiology)
 
 
 
