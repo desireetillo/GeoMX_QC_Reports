@@ -71,7 +71,7 @@ modules <- gsub(".pkc", "", pkcs)
 
 Before excluding any low-performing ROI/AOI segments, we visualize the distributions of the data for the different QC parameters.  The cutoffs used are:
 
-* **Raw sequencing reads**: segments with >1000 raw reads are removed.
+* **Raw sequencing reads**: segments with <1000 raw reads are removed.
 * **% Aligned,% Trimmed, or % Stitched sequencing reads**: segments below ~80% for one or more of these QC parameters are removed.
 * **% Sequencing saturation ([1-deduplicated reads/aligned reads]%)**: segments below ~50% require additional sequencing to capture full sample diversity and are not typically analyzed until improved.
 * **Negative Count**: this is the geometric mean of the several unique negative probes in the GeoMx panel that do not target mRNA and establish the background count level per segment; segments with low negative counts (<10) are not necessarily removed but may be studied closer for low endogenous gene signal and/or insufficient tissue sampling.
@@ -185,6 +185,14 @@ kable(table(NTC_Count = sData(myData)$NTC),
 kable(QC_Summary, caption = "QC Summary Table for each Segment")
 ```
 
+<!-- We will now remove the flagged segments. -->
+
+<!-- ```{r RemoveFlagged} -->
+<!-- myData <- myData[, QCResults$QCStatus == "PASS"] -->
+<!-- # Subsetting our dataset has removed samples which did not pass QC -->
+<!-- dim(myData) -->
+
+<!-- ``` -->
 
 # Probe QC
 
@@ -308,12 +316,14 @@ LOQ_Mat <- LOQ_Mat[fData(target_myData)$TargetName, ]
 
 We first filter out segments with exceptionally low signal. These segments will have a small fraction of panel genes detected above the LOQ relative to the other segments in the study. 
 
-```{r segDetectionBarplot}
+```{r segDetectionBarplotAndTable}
+
 # Save detection rate information to pheno data
 pData(target_myData)$GenesDetected <- 
   colSums(LOQ_Mat, na.rm = TRUE)
 pData(target_myData)$GeneDetectionRate <-
   pData(target_myData)$GenesDetected / nrow(target_myData)
+
 
 # Determine detection thresholds: 1%, 5%, 10%, 15%, >15%
 pData(target_myData)$DetectionThreshold <- 
@@ -331,6 +341,14 @@ ggplot(pData(target_myData),
   labs(x = "Gene Detection Rate",
        y = "Segments, #",
        fill = "Segment class")
+
+
+library(DT)
+tmp_data<-pData(target_myData)
+tmp_data<-tmp_data[,c("class","region","GenesDetected","GeneDetectionRate")]
+datatable(tmp_data,
+                  options=list(pageLength = 10)
+                  ) %>%  formatRound(c(4), 2)
 
 ```
 
@@ -531,7 +549,7 @@ Now that we have filtered and normalized our data set we can explore the data.
 library(umap)
 library(Rtsne)
 
-myshapes<-c(4,8,15,16,17,18,21,22,3,42)
+myshapes<-c(16,17,18,15,21,22,3,42,4,8)
 # update defaults for umap to contain a stable random_state (seed)
 custom_umap <- umap::umap.defaults
 custom_umap$random_state <- 42
@@ -561,13 +579,15 @@ ggplot(pData(target_myData),
 ## run PCA
 PCAx<-1
 PCAy<-2
-PCAxy <- c(as.integer( PCAx ),as.integer( PCAy) ) # selected principal components
+PCAz<-3
+
+PCAxyz <- c(as.integer( PCAx ),as.integer( PCAy), as.integer(PCAz) ) # selected principal components
 
 
 pca.object <- prcomp(t(log2(assayDataElement(target_myData , elt = "q_norm"))))
-pcaData = as.data.frame(pca.object$x[, PCAxy]); 
-pData(target_myData)[, c("PC1", "PC2")] <- pcaData[,c(1,2)]
-percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
+pcaData = as.data.frame(pca.object$x[, PCAxyz]); 
+pData(target_myData)[, c("PC1", "PC2", "PC3")] <- pcaData[,c(1,2,3)]
+percentVar=round(100*summary(pca.object)$importance[2, PCAxyz],0)
 
 
 ggplot(pData(target_myData),
@@ -577,7 +597,33 @@ ggplot(pData(target_myData),
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
   scale_shape_manual(values=myshapes) +
   theme_bw()
+```
 
+## Interactive PCA plot
+
+_**Note**: this only works for up to 8 region types._
+
+```{r InteractivePCA, eval = TRUE,message=FALSE, warning=FALSE,out.width="100%", out.height="100%"}
+
+library(plotly)
+
+fig <- plot_ly(pData(target_myData),
+               x = ~PC1, 
+               y = ~PC2, 
+               z = ~PC3, 
+               color = ~class,
+               symbol=~region, 
+               marker=list(size=4),
+               symbols = c('circle','diamond','cross',  'x', 'square','o','diamond-open','square-open'),
+               colors='Dark2',
+               autosize = F, width = 700, height = 700,margin=m)
+
+fig <- fig %>% add_markers()
+fig <- fig %>% layout(scene = list(xaxis = list(title = paste0('PC1 (', percentVar[1],"%)" )),
+                     yaxis = list(title = paste0('PC2 (', percentVar[2],"%)" )),
+                     zaxis = list(title = paste0('PC3 (', percentVar[3],"%)" ))))
+
+fig
 
 ```
 
