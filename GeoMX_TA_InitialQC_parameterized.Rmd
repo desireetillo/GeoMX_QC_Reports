@@ -607,6 +607,13 @@ _**Note**: this only works for up to 8 region types._
 
 library(plotly)
 
+m <- list(
+    l = 5,
+    r = 5,
+    b = 0,
+    t = 0,
+    pad = 0
+)
 fig <- plot_ly(pData(target_myData),
                x = ~PC1, 
                y = ~PC2, 
