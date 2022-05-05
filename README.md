@@ -44,7 +44,8 @@ rmarkdown::render('GeoMX_TA_InitialQC_parameterized.Rmd',
                               datadir=<DATA_DIRECTORY>,
                               DCCdir=<DCC_DIRECTORY_NAME>,
                               PKCFilename=<PKC_FILE_NAME>,
-                              WorkSheet=<WORKSHEET_FILE_NAME>
+                              WorkSheet=<WORKSHEET_FILE_NAME>,
+			      RemoveFlagSegment=FALSE
                   )
 )
 ```

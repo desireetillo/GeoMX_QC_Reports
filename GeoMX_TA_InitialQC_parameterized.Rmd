@@ -15,6 +15,7 @@ params:
   DCCdir: "dccs"
   PKCFilename: "TAP_H_WTA_v1.0.pkc"
   WorkSheet: "kidney_demo_AOI_Annotations.xlsx"
+  RemoveFlagSegment: FALSE
 ---
 
 
@@ -30,6 +31,7 @@ PKCfilename<- params$PKCFilename
 WorkSheet<- params$WorkSheet
 output_prefix<-params$output_prefix
 projectname<-params$projectname
+RemoveFlagSegment<-params$RemoveFlagSegment
 
 
 ```
@@ -185,14 +187,20 @@ kable(table(NTC_Count = sData(myData)$NTC),
 kable(QC_Summary, caption = "QC Summary Table for each Segment")
 ```
 
-<!-- We will now remove the flagged segments. -->
+We are running this workflow with FlaggedQCRemoval set to `r RemoveFlagSegment`.  If this is TRUE we will now remove samples that did not pass our QC thresholds.
 
-<!-- ```{r RemoveFlagged} -->
-<!-- myData <- myData[, QCResults$QCStatus == "PASS"] -->
-<!-- # Subsetting our dataset has removed samples which did not pass QC -->
-<!-- dim(myData) -->
+```{r RemoveFlagged}
 
-<!-- ``` -->
+if(RemoveFlagSegment){
+  print("Subsetting our dataset has removed samples which did not pass QC")
+  myData <- myData[, QCResults$QCStatus == "PASS"]
+}
+if(!RemoveFlagSegment){
+  print("We are NOT removing flagged segments")
+}
+dim(myData)
+
+```
 
 # Probe QC
 
