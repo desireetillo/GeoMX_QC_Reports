@@ -568,7 +568,7 @@ umap_out <-
 pData(target_myData)[, c("UMAP1", "UMAP2")] <- umap_out$layout[, c(1,2)]
 ggplot(pData(target_myData),
        aes(x = UMAP1, y = UMAP2, color = class, shape=region)) +
-  geom_point(size = 3, alpha=0.5) +
+  geom_point(size = 3) +
   scale_shape_manual(values=myshapes) +
   theme_bw()
 
@@ -580,7 +580,7 @@ tsne_out <-
 pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_myData),
        aes(x = tSNE1, y = tSNE2, color = class, shape=region)) +
-  geom_point(size = 3,alpha=0.5) +
+  geom_point(size = 3) +
   scale_shape_manual(values=myshapes) +
   theme_bw()
 
@@ -600,7 +600,7 @@ percentVar=round(100*summary(pca.object)$importance[2, PCAxyz],0)
 
 ggplot(pData(target_myData),
        aes(x = PC1, y = PC2, color = class, shape=region)) +
-  geom_point(size = 3,alpha=0.5) +
+  geom_point(size = 3) +
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
   scale_shape_manual(values=myshapes) +
