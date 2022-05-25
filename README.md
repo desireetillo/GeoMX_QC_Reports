@@ -45,12 +45,13 @@ rmarkdown::render('GeoMX_TA_InitialQC_parameterized.Rmd',
                               DCCdir=<DCC_DIRECTORY_NAME>,
                               PKCFilename=<PKC_FILE_NAME>,
                               WorkSheet=<WORKSHEET_FILE_NAME>,
-			      RemoveFlagSegment=FALSE
+			     			  RemoveFlagSegment=FALSE
                   )
 )
 ```
 
 ## Output
 * A nicely formatted html report
+* Segment QC metrics (`<output_prefix>.SegmentQCMetrics.csv`) 
 * Raw counts (`<output_prefix>_raw_counts.csv`) and Q3 normalized data (`<output_prefix>_normdata.csv`) for each ROI 
 * workspace in Rdata format(`<output_prefix>.RData`)

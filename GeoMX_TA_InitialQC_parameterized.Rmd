@@ -205,6 +205,13 @@ if(!RemoveFlagSegment){
 }
 dim(myData)
 
+
+segment_qc_data<- data.frame(sData(myData))
+segment_qc_data<-tibble::rownames_to_column(segment_qc_data,"DCCFileName")
+
+segment_qc_data<-do.call(data.frame,segment_qc_data)
+write.table(segment_qc_data,file=paste0(output_prefix,'.SegmentQCMetrics.csv'), sep=',',row.names = F,col.names = T)
+
 ```
 
 # Probe QC
