@@ -17,7 +17,7 @@ DATA_DIRECTORY
 Where: 
 
 * `DCC_Folder` is the directory containing the Digital Count Conversion (*.dcc) files from the Nanostring NGS pipeline.
-*  `pkc_file` is the probe-gene configuration file for the specific assay (WTA/CTA) and species (mouse/human), obtained [here] (https://nanostring.com/products/geomx-digital-spatial-profiler/geomx-dsp-configuration-files/) (select "RNA Assays").
+*  `pkc_file` is the probe-gene configuration file for the specific assay (WTA/CTA) and species (mouse/human), obtained [here](https://nanostring.com/products/geomx-digital-spatial-profiler/geomx-dsp-configuration-files/) (select "RNA Assays").
 * `annotations.xlsx` is an excel file containing metadata for each ROI.  The sheet containing this information should be named "Template", and requires these specific columns:
 	*  area 
 	*  nuclei 
@@ -45,7 +45,7 @@ rmarkdown::render('GeoMX_TA_InitialQC_parameterized.Rmd',
                               DCCdir=<DCC_DIRECTORY_NAME>,
                               PKCFilename=<PKC_FILE_NAME>,
                               WorkSheet=<WORKSHEET_FILE_NAME>,
-			     			  RemoveFlagSegment=FALSE
+			      RemoveFlagSegment=FALSE
                   )
 )
 ```
