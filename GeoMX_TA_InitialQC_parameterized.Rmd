@@ -78,7 +78,7 @@ Before excluding any low-performing ROI/AOI segments, we visualize the distribut
 * **Raw sequencing reads**: segments with <1000 raw reads are removed.
 * **% Aligned,% Trimmed, or % Stitched sequencing reads**: segments below ~80% for one or more of these QC parameters are removed.
 * **% Sequencing saturation ([1-deduplicated reads/aligned reads]%)**: segments below ~50% require additional sequencing to capture full sample diversity and are not typically analyzed until improved.
-* **Negative Count**: this is the geometric mean of the several unique negative probes in the GeoMx panel that do not target mRNA and establish the background count level per segment; segments with low negative counts (<10) are not necessarily removed but may be studied closer for low endogenous gene signal and/or insufficient tissue sampling.
+* **Negative Count**: this is the geometric mean of the several unique negative probes in the GeoMx panel that do not target mRNA and establish the background count level per segment; segments with low negative counts (1-10) are not necessarily removed but may be studied closer for low endogenous gene signal and/or insufficient tissue sampling.
 * **No Template Control (NTC) count**: values >1,000 could indicate contamination for the segments associated with this NTC; however, in cases where the NTC count is between 1,000- 10,000, the segments may be used if the NTC data is uniformly low (e.g. 0-2 counts for all probes).
 * **Nuclei**: >100 nuclei per segment is generally recommended; however, this cutoff is highly study/tissue dependent and may need to be reduced; what is most important is consistency in the nuclei distribution for segments within the study.  We use 20 in this case.
 * **Area**: generally correlates with nuclei; a strict cutoff is not generally applied based on area.
@@ -96,7 +96,7 @@ QC_params <-
        percentStitched = 80,   # Minimum % of reads stitched (80%)
        percentAligned = 80,    # Minimum % of reads aligned to known targets (80%)
        percentSaturation = 50, # Minimum sequencing saturation (50%)
-       minNegativeCount = 10,   # Minimum negative control counts (10)
+       minNegativeCount = 1,   # Minimum negative control counts (10)
        maxNTCCount = 1000,     # Maximum counts observed in NTC well (1000)
        minNuclei = 20,         # Minimum # of cells observed in a segment (100)
        minArea = 1000)         # Minimum segment area (5000)
