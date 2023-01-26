@@ -1,6 +1,6 @@
 ---
-title: "GeoMX DSP Transcriptome Atlas Initial QC for `r params$output_prefix`"
-author: "CPTR/CCR Genomics Core/GAU"
+author: "CPTR/CCR Genomics Core/Genome Analysis Unit"
+title: "GeoMX DSP Transcriptome Atlas Initial QC"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
   html_document:
@@ -32,7 +32,9 @@ WorkSheet<- params$WorkSheet
 output_prefix<-params$output_prefix
 projectname<-params$projectname
 RemoveFlagSegment<-params$RemoveFlagSegment
+output_dir<-"processed_data/"
 
+dir.create(output_dir)
 
 ```
 
@@ -115,8 +117,11 @@ QC_Summary["TOTAL FLAGS", ] <-
     sum(QCResults[, "QCStatus"] == "WARNING"))
 ```
 
+## QC histograms {.tabset .tabset-fade}
 
-``` {r plotQCHistograms, eval = TRUE, warning = FALSE, message = FALSE}
+### % Trimmed
+
+``` {r plotQCHistograms Trimmed, eval = TRUE, warning = FALSE, message = FALSE}
 library(ggplot2)
 
 col_by <- "class"
@@ -142,16 +147,47 @@ QC_histogram <- function(assay_data = NULL,
   plt
 }
 
-library(knitr)
 QC_histogram(sData(myData), "Trimmed (%)", col_by, 80, c(0,101))
+```
+
+### % Stitched 
+``` {r plotQCHistograms Stitched, eval = TRUE, warning = FALSE, message = FALSE}
 QC_histogram(sData(myData), "Stitched (%)", col_by, 80, c(0,101))
+```
+
+### % Aligned 
+
+``` {r plotQCHistograms Aligned, eval = TRUE, warning = FALSE, message = FALSE}
 QC_histogram(sData(myData), "Aligned (%)", col_by, 80, c(0,101))
+```
+
+### % Saturated
+
+``` {r plotQCHistograms Saturated, eval = TRUE, warning = FALSE, message = FALSE}
+
 QC_histogram(sData(myData), "Saturated (%)", col_by, 50, c(0,101)) +
   labs(title = "Sequencing Saturation (%)",
        x = "Sequencing Saturation (%)")
+```
+
+### Area
+``` {r plotQCHistograms area, eval = TRUE, warning = FALSE, message = FALSE}
+
 QC_histogram(sData(myData), "area", col_by, 1000) +
   scale_x_continuous(trans = "log10")
+
+```
+
+### Nuclei count
+``` {r plotQCHistograms nuclei, eval = TRUE, warning = FALSE, message = FALSE}
+
 QC_histogram(sData(myData), "nuclei", col_by, 20)
+
+```
+
+### Negative Count
+
+``` {r plotQCHistograms negGeoMean, eval = TRUE, warning = FALSE, message = FALSE}
 
 # calculate the negative geometric means for each module
 negativeGeoMeans <- 
@@ -175,13 +211,18 @@ for(ann in negCols) {
 pData(myData) <- pData(myData)[, !colnames(pData(myData)) %in% negCols]
 ```
 
+## {.unlisted .unnumbered}
+
+
 Below is a table summarizing the # of segments with a given NTC count:
 ```{r NTCcounts, results= "asis"}
+library(knitr)
+
 # show all NTC values, Freq = # of Segments with a given NTC count (for WTA samples this is the deduplicated read count from the empty well A01):
 kable(table(NTC_Count = sData(myData)$NTC),
       col.names = c("NTC Count", "# of Segments"), caption = "NTC count summary")
 
-if(sData(myData)$NTC >1000){
+if(length(sData(myData)$NTC >1000)){
   cat("Readout groups with high NTC counts:\n")
   unique(substr(rownames(sData(myData)),1,17)[sData(myData)$NTC>1000])
 }
@@ -210,7 +251,7 @@ segment_qc_data<- data.frame(sData(myData))
 segment_qc_data<-tibble::rownames_to_column(segment_qc_data,"DCCFileName")
 
 segment_qc_data<-do.call(data.frame,segment_qc_data)
-write.table(segment_qc_data,file=paste0(output_prefix,'.SegmentQCMetrics.csv'), sep=',',row.names = F,col.names = T)
+write.table(segment_qc_data,file=paste0(output_dir, output_prefix,'.SegmentQCMetrics.csv'), sep=',',row.names = F,col.names = T)
 
 ```
 
@@ -283,7 +324,7 @@ length(unique(featureData(myData)[["TargetName"]]))
 target_myData <- aggregateCounts(myData)
 raw_counts<-data.frame(exprs(target_myData))
 raw_counts <- tibble::rownames_to_column(raw_counts, "Gene")
-out_raw_counts<-paste0(output_prefix,'_raw_counts.csv')
+out_raw_counts<-paste0(output_dir, output_prefix,'_raw_counts.csv')
 write.table(raw_counts,out_raw_counts,sep=",",row.names = F,col.names=T,quote=F)
 ```
 
@@ -348,14 +389,14 @@ pData(target_myData)$GeneDetectionRate <-
 # Determine detection thresholds: 1%, 5%, 10%, 15%, >15%
 pData(target_myData)$DetectionThreshold <- 
   cut(pData(target_myData)$GeneDetectionRate,
-      breaks = c(0, 0.01, 0.05, 0.1, 0.15, 1),
+      breaks = c(-1, 0.01, 0.05, 0.1, 0.15, 1),
       labels = c("<1%", "1-5%", "5-10%", "10-15%", ">15%"))
 
 # stacked barplot of different cutpoints (1%, 5%, 10%, 15%)
 ggplot(pData(target_myData),
        aes(x = DetectionThreshold)) +
   geom_bar(aes(fill = `class`)) +
-  geom_text(stat = "count", aes(label = ..count..), vjust = -0.5) +
+  geom_text(stat = "count", aes(label = after_stat(count)), vjust = -0.5) +
   theme_bw() +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
   labs(x = "Gene Detection Rate",
@@ -397,7 +438,6 @@ dim(target_myData)
 
 
 ``` {r goi detection}
-library(scales) # for precent
 
 # Calculate detection rate:
 LOQ_Mat <- LOQ_Mat[, colnames(target_myData)]
@@ -519,7 +559,7 @@ plot_grid(plt1, btm_row, ncol = 1, labels = c("A", ""))
 
 ```{r normalizeObject, eval = TRUE}
 # Q3 norm (75th percentile) for WTA/CTA  with or without custom spike-ins
-target_myData <- normalize(target_myData , data_type = "RNA",
+target_myData <- normalize(target_myData , 
                              norm_method = "quant", 
                              desiredQuantile = .75,
                              toElt = "q_norm")
@@ -528,7 +568,7 @@ target_myData <- normalize(target_myData , data_type = "RNA",
 
 norm_data<-data.frame(assayDataElement(target_myData , elt = "q_norm"))
 norm_data <- tibble::rownames_to_column(norm_data, "Gene")
-out_norm_data<-paste0(output_prefix,'_Q3_normdata.',
+out_norm_data<-paste0(output_dir, output_prefix,'_Q3_normdata.',
                       'geneDetect',
                       geneDetectionRateThresh,
                       '_',
@@ -538,7 +578,7 @@ out_norm_data<-paste0(output_prefix,'_Q3_normdata.',
 
 write.table(norm_data,out_norm_data,sep=",",row.names = F,col.names=T,quote=F)
 # lets also save the entire targetmyData as an rstructure
-save(target_myData, file = paste0(output_prefix,".RData"))
+save(target_myData, file = paste0(output_dir, output_prefix,".RData"))
 
 ```
 
@@ -564,11 +604,11 @@ boxplot(assayDataElement(target_myData[,1:20], elt = "q_norm"),
 
 Now that we have filtered and normalized our data set we can explore the data. 
 
-## UMAP & t-SNE & PCA
+## UMAP,t-SNE, PCA, heatmap {.tabset .tabset-fade}
 
-``` {r dimReduction, eval = TRUE,message=FALSE, warning=FALSE}
+### UMAP
+``` {r dimReduction UMAP, eval = TRUE,message=FALSE, warning=FALSE}
 library(umap)
-library(Rtsne)
 
 myshapes<-c(16,17,18,15,21,22,3,42,4,8)
 # update defaults for umap to contain a stable random_state (seed)
@@ -581,10 +621,15 @@ umap_out <-
 pData(target_myData)[, c("UMAP1", "UMAP2")] <- umap_out$layout[, c(1,2)]
 ggplot(pData(target_myData),
        aes(x = UMAP1, y = UMAP2, color = class, shape=region)) +
-  geom_point(size = 3) +
+  geom_point(size = 4) +
   scale_shape_manual(values=myshapes) +
   theme_bw()
+```
 
+### t-SNE
+
+``` {r dimReduction tSNE, eval = TRUE,message=FALSE, warning=FALSE}
+library(Rtsne)
 # run tSNE
 set.seed(42) # set the seed for tSNE as well
 tsne_out <-
@@ -593,11 +638,14 @@ tsne_out <-
 pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_myData),
        aes(x = tSNE1, y = tSNE2, color = class, shape=region)) +
-  geom_point(size = 3) +
+  geom_point(size = 4) +
   scale_shape_manual(values=myshapes) +
   theme_bw()
+```
 
-## run PCA
+
+### PCA
+``` {r dimReduction PCA, eval = TRUE,message=FALSE, warning=FALSE}
 PCAx<-1
 PCAy<-2
 PCAz<-3
@@ -613,14 +661,14 @@ percentVar=round(100*summary(pca.object)$importance[2, PCAxyz],0)
 
 ggplot(pData(target_myData),
        aes(x = PC1, y = PC2, color = class, shape=region)) +
-  geom_point(size = 3) +
+  geom_point(size = 4) +
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
   scale_shape_manual(values=myshapes) +
   theme_bw()
 ```
 
-## Interactive PCA plot
+### Interactive PCA plot
 
 _**Note**: this only works for up to 8 region types._
 
@@ -656,7 +704,7 @@ fig
 
 ```
 
-## Heat map of high CV (>0.8) genes
+### Heatmap
 
 ``` {r CVheatmap, eval = TRUE, echo = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE}
 library(pheatmap)  # for pheatmap
@@ -675,6 +723,7 @@ GOI <- names(CV_dat)[CV_dat > quantile(CV_dat, 0.8)]
 
 pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
          scale = "row", 
+         main="Heatmap of high CV (>0.8) genes",
          show_rownames = FALSE, show_colnames = FALSE,
          border_color = NA,
          clustering_method = "average",
@@ -685,6 +734,8 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
          annotation_col = pData(target_myData)[, c("class", "region")])
 
 ```
+
+## {.unlisted .unnumbered}
 
 # R tool version information
 
