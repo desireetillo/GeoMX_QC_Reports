@@ -8,6 +8,7 @@ output:
     toc: yes
     toc_depth: '5'
     code_folding: hide
+    toc_float: true
 params:
   projectname: "demodata"
   output_prefix: "demodata"
